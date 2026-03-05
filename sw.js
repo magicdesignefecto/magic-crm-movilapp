@@ -3,7 +3,7 @@
 // Estrategia: Network First para API, Cache First para assets
 // =====================================================
 
-const CACHE_NAME = 'magic-crm-v1';
+const CACHE_NAME = 'magic-crm-v2';
 
 // Assets estáticos que forman la "shell" de la app
 const SHELL_ASSETS = [
