@@ -941,6 +941,10 @@ export const DashboardModule = {
             const overdueActions = actions.filter(a => a.diffDays < 0);
             const todayActions = actions.filter(a => a.diffDays === 0);
 
+            console.log('🔔 ALERTAS — Total acciones sin completar:', actions.length);
+            console.log('🔴 Vencidas:', overdueActions.length, overdueActions);
+            console.log('🟡 Hoy:', todayActions.length, todayActions);
+
             // Collect alert sections (unified)
             const alertParts = [];
 
@@ -948,14 +952,16 @@ export const DashboardModule = {
                 alertParts.push(`<div style="text-align:left; margin-bottom:8px;"><strong style="color:#F87171 !important;">🔴 ${overdueActions.length} cobro${overdueActions.length > 1 ? 's' : ''} vencido${overdueActions.length > 1 ? 's' : ''}</strong></div>`);
                 overdueActions.forEach(a => {
                     const days = Math.abs(a.diffDays);
-                    alertParts.push(`<div style="text-align:left; font-size:0.88rem; padding:4px 0; color:#FCA5A5 !important;">⚠️ ${a.leadName || a.client} — ${days}d de retraso · ${a.currency || 'Bs.'} ${(a.amount || 0).toLocaleString('es-ES')}</div>`);
+                    const curr = a.leadCurrency === 'USD' ? '$us.' : a.leadCurrency === 'EUR' ? '€' : 'Bs.';
+                    alertParts.push(`<div style="text-align:left; font-size:0.88rem; padding:4px 0; color:#FCA5A5 !important;">⚠️ ${a.leadName} — ${days}d de retraso · ${curr} ${Number(a.leadTotal || 0).toLocaleString('es-ES')}</div>`);
                 });
             }
 
             if (todayActions.length > 0) {
                 alertParts.push(`<div style="text-align:left; margin-top:8px; margin-bottom:4px;"><strong style="color:#FBBF24 !important;">🟡 ${todayActions.length} cobro${todayActions.length > 1 ? 's' : ''} para hoy</strong></div>`);
                 todayActions.forEach(a => {
-                    alertParts.push(`<div style="text-align:left; font-size:0.88rem; padding:4px 0; color:#FCD34D !important;">📅 ${a.leadName || a.client} · ${a.currency || 'Bs.'} ${(a.amount || 0).toLocaleString('es-ES')}</div>`);
+                    const curr = a.leadCurrency === 'USD' ? '$us.' : a.leadCurrency === 'EUR' ? '€' : 'Bs.';
+                    alertParts.push(`<div style="text-align:left; font-size:0.88rem; padding:4px 0; color:#FCD34D !important;">📅 ${a.leadName} · ${curr} ${Number(a.leadTotal || 0).toLocaleString('es-ES')}</div>`);
                 });
             }
 
@@ -993,33 +999,45 @@ export const DashboardModule = {
                 }
             } catch (e) { console.error('Error loading projects:', e); }
 
+            console.log('📋 Alert parts:', alertParts.length);
+
             // Show unified alert (esperar a que SweetAlert2 esté disponible)
             if (alertParts.length > 0) {
+                console.log('🚨 Intentando mostrar alerta con', alertParts.length, 'items...');
+
+                // Esperar a Swal con timeout de 5 segundos
                 const waitForSwal = () => new Promise((resolve) => {
                     if (typeof Swal !== 'undefined') return resolve(true);
                     let attempts = 0;
                     const check = setInterval(() => {
                         attempts++;
                         if (typeof Swal !== 'undefined') { clearInterval(check); resolve(true); }
-                        else if (attempts >= 25) { clearInterval(check); resolve(false); } // 5s máximo
+                        else if (attempts >= 25) { clearInterval(check); resolve(false); }
                     }, 200);
                 });
 
-                waitForSwal().then(available => {
-                    if (available) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: '🚨 Alertas del CRM',
-                            html: alertParts.join(''),
-                            confirmButtonColor: '#DC2626',
-                            confirmButtonText: 'Entendido',
-                            timer: 8000,
-                            timerProgressBar: true
-                        });
-                    }
-                });
+                const swalAvailable = await waitForSwal();
+                console.log('🔔 Swal disponible:', swalAvailable);
+
+                if (swalAvailable) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '🚨 Alertas del CRM',
+                        html: alertParts.join(''),
+                        confirmButtonColor: '#DC2626',
+                        confirmButtonText: 'Entendido',
+                        timer: 8000,
+                        timerProgressBar: true
+                    });
+                } else {
+                    console.warn('⚠️ SweetAlert2 no cargó. Mostrando alert nativo.');
+                    alert('🚨 Tienes ' + overdueActions.length + ' cobro(s) vencido(s) y ' + todayActions.length + ' cobro(s) para hoy');
+                }
+            } else {
+                console.log('✅ No hay alertas pendientes que mostrar');
             }
-        } catch (e) { console.error('Error loading projects:', e); }
+        } catch (e) { console.error('❌ Error en sistema de alertas:', e); }
+
 
         // Renderizar acciones con navegación por mes
         DashboardModule._allActions = data.upcomingActions || [];
