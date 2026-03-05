@@ -993,16 +993,30 @@ export const DashboardModule = {
                 }
             } catch (e) { console.error('Error loading projects:', e); }
 
-            // Show unified alert
-            if (alertParts.length > 0 && typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: '🚨 Alertas del CRM',
-                    html: alertParts.join(''),
-                    confirmButtonColor: '#DC2626',
-                    confirmButtonText: 'Entendido',
-                    timer: 8000,
-                    timerProgressBar: true
+            // Show unified alert (esperar a que SweetAlert2 esté disponible)
+            if (alertParts.length > 0) {
+                const waitForSwal = () => new Promise((resolve) => {
+                    if (typeof Swal !== 'undefined') return resolve(true);
+                    let attempts = 0;
+                    const check = setInterval(() => {
+                        attempts++;
+                        if (typeof Swal !== 'undefined') { clearInterval(check); resolve(true); }
+                        else if (attempts >= 25) { clearInterval(check); resolve(false); } // 5s máximo
+                    }, 200);
+                });
+
+                waitForSwal().then(available => {
+                    if (available) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '🚨 Alertas del CRM',
+                            html: alertParts.join(''),
+                            confirmButtonColor: '#DC2626',
+                            confirmButtonText: 'Entendido',
+                            timer: 8000,
+                            timerProgressBar: true
+                        });
+                    }
                 });
             }
         } catch (e) { console.error('Error loading projects:', e); }
