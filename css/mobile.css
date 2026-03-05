@@ -137,10 +137,13 @@ a,
 .modal-content {
     width: 100% !important;
     max-width: 100% !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+    height: 100dvh !important;
+    /* dvh = dynamic viewport height (respeta barra del navegador) */
+    max-height: 100dvh !important;
     border-radius: 0 !important;
     margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 .modal-overlay {
@@ -150,8 +153,8 @@ a,
 
 .modal-header {
     padding: 14px 16px;
-    position: sticky;
-    top: 0;
+    flex-shrink: 0;
+    /* No se comprime: siempre visible */
     z-index: 10;
 }
 
@@ -170,8 +173,12 @@ a,
 
 .modal-body {
     padding: 16px;
-    flex: 1;
-    overflow-y: auto;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+    /* Clave para que flex + overflow funcione */
 }
 
 /* =============================================================
@@ -180,25 +187,36 @@ a,
 .swal2-popup {
     width: 92vw !important;
     max-width: 92vw !important;
+    max-height: 90dvh !important;
     padding: 20px 16px !important;
     font-size: 1rem !important;
     border-radius: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 .swal2-title {
     font-size: 1.2rem !important;
     padding: 12px 0 0 !important;
+    flex-shrink: 0;
 }
 
 .swal2-html-container {
     font-size: 0.95rem !important;
     line-height: 1.5 !important;
     padding: 8px 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    max-height: none !important;
+    /* Dejar que flex controle el tamaño */
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .swal2-actions {
     gap: 10px !important;
     padding: 8px 0 4px !important;
+    flex-shrink: 0;
 }
 
 .swal2-confirm,
@@ -215,6 +233,7 @@ a,
     width: 64px !important;
     height: 64px !important;
     margin: 12px auto !important;
+    flex-shrink: 0;
 }
 
 .swal2-icon .swal2-icon-content {
@@ -307,12 +326,9 @@ textarea,
     border-radius: 10px;
 }
 
-/* Botones dentro de headers/actions */
-button,
-[role="button"] {
-    min-height: 40px;
-    min-width: 40px;
-}
+/* Botones dentro de headers/actions — solo botones directos, NO inline */
+/* Nota: no aplicamos min-height a TODOS los botones porque rompe
+   botones inline pequeños como filtros, badges, etc. */
 
 /* =============================================================
    8. TABLAS — Scroll horizontal
