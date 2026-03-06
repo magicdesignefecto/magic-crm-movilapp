@@ -1,4 +1,4 @@
-﻿import { Table } from '../components/Table.js';
+import { Table } from '../components/Table.js';
 import { Modal } from '../components/Modal.js';
 import { QuotesService } from '../services/quotes.service.js';
 import { LeadsService } from '../services/leads.service.js';
@@ -278,6 +278,9 @@ export const QuotesModule = {
     },
 
     initModalEvents: () => {
+        // Guard: evitar registro duplicado de eventos (bug duplicate render)
+        if (QuotesModule._eventsInitialized) return;
+        QuotesModule._eventsInitialized = true;
 
         // --- LEAD SELECTOR: auto-fill client info ---
         const leadSelector = document.getElementById('leadSelector');
@@ -476,6 +479,13 @@ export const QuotesModule = {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
+                // Guard: evitar envío duplicado (bug duplicate submission)
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (QuotesModule._isSubmitting) return;
+                QuotesModule._isSubmitting = true;
+                const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+                if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '⏳ Guardando...'; }
+
                 const client = document.getElementById('inputClient').value;
                 const clientCompany = document.getElementById('inputCompany').value;
                 const clientPosition = document.getElementById('inputPosition').value;
@@ -549,6 +559,10 @@ export const QuotesModule = {
                 } catch (error) {
                     console.error('Error:', error);
                     Swal.fire('Error', 'No se pudo guardar la cotización.', 'error');
+                } finally {
+                    // Restaurar botón de envío
+                    QuotesModule._isSubmitting = false;
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnText; }
                 }
             });
         }
@@ -990,5 +1004,8 @@ export const QuotesModule = {
         });
     },
 
-    destroy: () => { }
+    destroy: () => {
+        QuotesModule._eventsInitialized = false;
+        QuotesModule._isSubmitting = false;
+    }
 };
