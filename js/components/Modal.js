@@ -62,9 +62,24 @@ export const Modal = {
         });
 
         // 2. Clic en el fondo oscuro (fuera de la tarjeta)
+        // Requiere confirmación para evitar cierre accidental (fat finger en móvil)
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                Modal.close(modalId);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '¿Cerrar formulario?',
+                        text: 'Los datos no guardados se perderán.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, cerrar',
+                        cancelButtonText: 'Continuar editando',
+                        confirmButtonColor: '#EF4444',
+                    }).then(result => {
+                        if (result.isConfirmed) Modal.close(modalId);
+                    });
+                } else {
+                    Modal.close(modalId);
+                }
             }
         });
     }
