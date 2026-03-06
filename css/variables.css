@@ -483,6 +483,23 @@ body.theme-dark button[style*="background: white"] {
     color: var(--text-main) !important;
 }
 
+/* Próximos Pasos en cotización - dark mode (fix invisible text) */
+body.theme-dark .next-step-row label {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .next-step-row select,
+body.theme-dark .next-step-row input[type="date"] {
+    background-color: var(--bg-input) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark [style*="color:#666"],
+body.theme-dark [style*="color: #666"] {
+    color: var(--text-muted) !important;
+}
+
 body.theme-dark .total-label,
 body.theme-dark [class*="total"] span:first-child {
     color: var(--text-main) !important;
